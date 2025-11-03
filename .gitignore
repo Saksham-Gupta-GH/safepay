@@ -32,11 +32,13 @@ ENV/
 
 # Application specific
 .env
-*.pkl
 *.bin
 *.json
 !package.json
 !package-lock.json
+# Include model files
+!fraud_model_augmented.pkl
+!card_type_encoder.pkl
 
 # Logs
 *.log

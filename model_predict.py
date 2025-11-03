@@ -2,10 +2,6 @@ import pickle
 import numpy as np
 from datetime import datetime
 
-# Load original model
-with open("fraud_model.pkl", "rb") as f:
-    model = pickle.load(f)
-
 # Load augmented model and encoder
 with open("fraud_model_augmented.pkl", "rb") as f:
     model_augmented = pickle.load(f)
@@ -14,9 +10,8 @@ with open("card_type_encoder.pkl", "rb") as f:
     card_type_encoder = pickle.load(f)
 
 def predict_fraud(data):
-    """Original prediction function for backward compatibility"""
-    features = np.array([[data["Age"], data["Transaction_Amount"], data["Account_Balance"]]])
-    pred = model.predict(features)[0]
+    """Use augmented model for all predictions"""
+    return predict_fraud_augmented(data)
     return "Fraudulent" if pred == 1 else "Legit"
 
 def predict_fraud_augmented(data):
