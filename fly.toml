@@ -1,0 +1,19 @@
+# Fly configuration for SafePay
+# Update `app` if you want a different app name on Fly
+app = "safepay"
+
+[build]
+  image = ""
+
+[env]
+  PORT = "10000"
+
+[[services]]
+  internal_port = 10000
+  protocol = "tcp"
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+  [[services.ports]]
+    handlers = ["tls","http"]
+    port = 443
