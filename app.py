@@ -8,6 +8,7 @@ from model_predict import predict_fraud, predict_fraud_augmented
 from homomorphic import get_paillier
 from searchable_encryption import token_for
 from datetime import datetime
+import json
 
 app = Flask(__name__)
 # Read SECRET_KEY from environment for production safety. Do NOT commit secrets to git.
@@ -199,6 +200,49 @@ def transaction():
             })
             
             # Log transaction
+            # Prepare payload for logging (kept plaintext for now, but also store encrypted/hash/signature for learning)
+            log_payload = {
+                "transaction_id": str(txn_result.inserted_id),
+                "customer_id": data["Customer_ID"],
+                "receiver_id": data["Receiver_ID"],
+                "amount": amount,
+                "sender_balance_before": sender_balance,
+                "sender_balance_after": new_sender_balance,
+                "receiver_balance_before": receiver_balance,
+                "receiver_balance_after": new_receiver_balance,
+                "expiry_date": data["Expiry_Date"],
+                "card_type": data["Card_Type"],
+                "fraud_flagged": fraud_status == "Fraudulent",
+                "status": "completed",
+                "can_undo": True,
+                "timestamp": datetime.now().isoformat()
+            }
+
+            # Serialize payload deterministically for hashing/signing
+            payload_str = json.dumps(log_payload, sort_keys=True, default=str)
+            try:
+                enc_payload = encrypt_data(payload_str)
+            except Exception:
+                enc_payload = ""
+
+            try:
+                hash_value = generate_hash(payload_str)
+            except Exception:
+                hash_value = ""
+
+            try:
+                signature = sign_data(hash_value)
+                signature_hex = signature.hex() if hasattr(signature, "hex") else str(signature)
+            except Exception:
+                signature = b""
+                signature_hex = ""
+
+            try:
+                verified = bool(verify_signature(hash_value, signature))
+            except Exception:
+                verified = False
+
+            # Insert transaction log with additional metadata fields (non-destructive)
             db.transaction_logs.insert_one({
                 "transaction_id": str(txn_result.inserted_id),
                 "customer_id": data["Customer_ID"],
@@ -213,7 +257,12 @@ def transaction():
                 "receiver_balance_after": new_receiver_balance,
                 "expiry_date": data["Expiry_Date"],
                 "card_type": data["Card_Type"],
-                "can_undo": True
+                "can_undo": True,
+                # Learning/metadata fields
+                "enc_data": enc_payload,
+                "hash": hash_value,
+                "signature_hex": signature_hex,
+                "verified": verified
             })
         except Exception as e:
             return str(e)
@@ -307,21 +356,56 @@ def undo_transaction(log_id):
         timestamp = datetime.now()
         notification_message = f"Transaction of ₹{amount:.2f} has been reversed by admin. Your new balance is ₹{new_sender_balance:.2f}"
         receiver_notification = f"Transaction of ₹{amount:.2f} has been reversed by admin. Your new balance is ₹{new_receiver_balance:.2f}"
-        
+
+        # Prepare encrypted/hash/signature fields for notifications (for learning/demo only)
+        try:
+            notif_payload_1 = json.dumps({"user_id": sender_id, "message": notification_message, "timestamp": timestamp.isoformat(), "type": "transaction_reversal"}, sort_keys=True)
+            notif_enc_1 = encrypt_data(notif_payload_1)
+            notif_hash_1 = generate_hash(notif_payload_1)
+            notif_sig_1 = sign_data(notif_hash_1)
+            notif_sig_hex_1 = notif_sig_1.hex() if hasattr(notif_sig_1, "hex") else str(notif_sig_1)
+            notif_verified_1 = bool(verify_signature(notif_hash_1, notif_sig_1))
+        except Exception:
+            notif_enc_1 = ""
+            notif_hash_1 = ""
+            notif_sig_hex_1 = ""
+            notif_verified_1 = False
+
+        try:
+            notif_payload_2 = json.dumps({"user_id": receiver_id, "message": receiver_notification, "timestamp": timestamp.isoformat(), "type": "transaction_reversal"}, sort_keys=True)
+            notif_enc_2 = encrypt_data(notif_payload_2)
+            notif_hash_2 = generate_hash(notif_payload_2)
+            notif_sig_2 = sign_data(notif_hash_2)
+            notif_sig_hex_2 = notif_sig_2.hex() if hasattr(notif_sig_2, "hex") else str(notif_sig_2)
+            notif_verified_2 = bool(verify_signature(notif_hash_2, notif_sig_2))
+        except Exception:
+            notif_enc_2 = ""
+            notif_hash_2 = ""
+            notif_sig_hex_2 = ""
+            notif_verified_2 = False
+
         db.notifications.insert_many([
             {
                 "user_id": sender_id,
                 "message": notification_message,
                 "timestamp": timestamp,
                 "read": False,
-                "type": "transaction_reversal"
+                "type": "transaction_reversal",
+                "enc_data": notif_enc_1,
+                "hash": notif_hash_1,
+                "signature_hex": notif_sig_hex_1,
+                "verified": notif_verified_1
             },
             {
                 "user_id": receiver_id,
                 "message": receiver_notification,
                 "timestamp": timestamp,
                 "read": False,
-                "type": "transaction_reversal"
+                "type": "transaction_reversal",
+                "enc_data": notif_enc_2,
+                "hash": notif_hash_2,
+                "signature_hex": notif_sig_hex_2,
+                "verified": notif_verified_2
             }
         ])
         
