@@ -40,6 +40,15 @@ ENV/
 !fraud_model_augmented.pkl
 !card_type_encoder.pkl
 
+# Large artifacts not needed in repo
+*.db
+*.sqlite
+*.sqlite3
+*.csv
+fraud_model.pkl
+transactions_augmented.csv
+database.db
+
 # Logs
 *.log
 
