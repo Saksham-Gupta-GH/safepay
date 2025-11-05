@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% block title %}Admin • SafePay{% endblock %}
+{% block content %}
+    <div class="fade-in" style="max-width: 1400px; margin: 0 auto;">
+        <!-- Admin Header -->
+        <div style="margin-bottom: 32px;">
+            <h2 style="font-size: 32px; margin-bottom: 8px;">
+                <svg style="width: 32px; height: 32px; display: inline-block; vertical-align: middle; margin-right: 8px; color: var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                Admin Dashboard
+            </h2>
+            <p style="color: var(--gray-500);">System overview and user management</p>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value">{{ users|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                </div>
+                <div class="stat-label">Total Transactions</div>
+                <div class="stat-value">{{ txns|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon danger">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <div class="stat-label">Fraud Detected</div>
+                <div class="stat-value">{{ txns|selectattr('fraud_status', 'equalto', 'Fraudulent')|list|length }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <div class="stat-label">Verified Txns</div>
+                <div class="stat-value">{{ txns|selectattr('verified', 'equalto', true)|list|length }}</div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="table-container">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">
+                <svg style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                All Users
+            </h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td><strong>{{ loop.index }}</strong></td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <svg style="width: 16px; height: 16px; color: var(--gray-400);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                    <strong>{{ u.username }}</strong>
+                                </div>
+                            </td>
+                            <td>
+                                {% if u.role == 'admin' %}
+                                    <span class="badge info">Admin</span>
+                                {% else %}
+                                    <span class="badge">User</span>
+                                {% endif %}
+                            </td>
+                            <td><strong style="color: var(--primary);">₹{{ '%.2f' % u.balance }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transaction Logs Table -->
+        <div class="table-container">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">
+                <svg style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Transaction Logs (Recent 100)
+            </h3>
+            <div style="overflow-x: auto;">
+                <table class="wide-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Timestamp</th>
+                            <th>Sender</th>
+                            <th>Receiver</th>
+                            <th>Amount</th>
+                            <th>Card Type</th>
+                            <th>Expiry</th>
+                            <th>Fraud Flag</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td><strong>{{ loop.index }}</strong></td>
+                            <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else 'N/A' }}</td>
+                            <td>{{ log.customer_id }}</td>
+                            <td>{{ log.receiver_id }}</td>
+                            <td><strong style="color: var(--primary);">₹{{ '%.2f' % log.amount }}</strong></td>
+                            <td><span class="badge">{{ log.card_type }}</span></td>
+                            <td>{{ log.expiry_date }}</td>
+                            <td>
+                                {% if log.fraud_flagged %}
+                                    <span class="badge danger">⚠ Fraud</span>
+                                {% else %}
+                                    <span class="badge success">✓ Legit</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.status == 'undone' %}
+                                    <span class="badge" style="background: var(--gray-200); color: var(--gray-700);">Undone</span>
+                                {% else %}
+                                    <span class="badge success">Completed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.can_undo and log.status != 'undone' %}
+                                    <form method="POST" action="{{ url_for('undo_transaction', log_id=log._id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-secondary" style="padding: 4px 12px; font-size: 13px;" onclick="return confirm('Are you sure you want to undo this transaction?');">
+                                            Undo
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span style="color: var(--gray-400); font-size: 13px;">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="table-container">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">
+                <svg style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                Recent Transactions
+            </h3>
+            <div style="overflow-x: auto;">
+                <table class="wide-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Sender</th>
+                            <th>Receiver</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                            <th>Card Type</th>
+                            <th>Expiry</th>
+                            <th>Fraud</th>
+                            <th>Verified</th>
+                            <th>Hash</th>
+                            <th>Signature</th>
+                            <th>Encrypted Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in txns %}
+                        <tr>
+                            <td><strong>{{ loop.index }}</strong></td>
+                            <td>{{ t.customer_id }}</td>
+                            <td>{{ t.receiver_id }}</td>
+                            <td><strong style="color: var(--primary);">₹{{ '%.2f' % t.amount }}</strong></td>
+                            <td>{{ t.txntype }}</td>
+                            <td>{{ t.card_type if t.card_type else 'N/A' }}</td>
+                            <td>{{ t.expiry_date if t.expiry_date else 'N/A' }}</td>
+                            <td>
+                                {% if t.fraud_status == 'Legit' %}
+                                    <span class="badge success">Legit</span>
+                                {% else %}
+                                    <span class="badge danger">Fraud</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if t.verified %}
+                                    <svg style="width: 20px; height: 20px; color: var(--success);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                {% else %}
+                                    <svg style="width: 20px; height: 20px; color: var(--danger);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                {% endif %}
+                            </td>
+                            <td><span class="scroll-cell"><code class="code-small" title="{{ t.hash }}">{{ t.hash }}</code></span></td>
+                            <td><span class="scroll-cell"><code class="code-small" title="{{ t.signature_hex }}">{{ t.signature_hex }}</code></span></td>
+                            <td><span class="scroll-cell"><code class="code-small" title="{{ t.enc_data }}">{{ t.enc_data }}</code></span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

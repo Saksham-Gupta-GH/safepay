@@ -1,0 +1,2 @@
+- [x] Add enc_data, verified, hash, signature_hex fields to transaction_logs insert in app.py
+- [x] Add enc_data, verified, hash, signature_hex fields to notifications insert in undo_transaction function in app.py
