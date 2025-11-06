@@ -2,9 +2,8 @@ import pickle
 import numpy as np
 from datetime import datetime
 
-# Load original model
-with open("fraud_model.pkl", "rb") as f:
-    model = pickle.load(f)
+# Original model removed from runtime to keep repo lightweight.
+# We proxy predict_fraud to the augmented model below for compatibility.
 
 # Load augmented model and encoder
 with open("fraud_model_augmented.pkl", "rb") as f:
@@ -14,10 +13,8 @@ with open("card_type_encoder.pkl", "rb") as f:
     card_type_encoder = pickle.load(f)
 
 def predict_fraud(data):
-    """Original prediction function for backward compatibility"""
-    features = np.array([[data["Age"], data["Transaction_Amount"], data["Account_Balance"]]])
-    pred = model.predict(features)[0]
-    return "Fraudulent" if pred == 1 else "Legit"
+    """Backward compatibility: route to augmented model."""
+    return predict_fraud_augmented(data)
 
 def predict_fraud_augmented(data):
     """New prediction function using augmented model with expiry date and card type"""

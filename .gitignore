@@ -1,0 +1,57 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+venv/
+ENV/
+env/
+
+# OS files
+.DS_Store
+
+# Local databases / keys
+database.db
+paillier_priv.json
+search_key.bin
+aes_key.bin
+
+# Large datasets (avoid committing)
+transactions.csv
+transactions_augmented.csv
+
+# Large model not tracked (use augmented model instead)
+fraud_model.pkl
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editor settings
+.vscode/
+.idea/
